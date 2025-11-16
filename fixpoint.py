@@ -3,13 +3,19 @@ import numpy as np
 
 vid = cv2.VideoCapture("videos\\example1.mov")
 
+cv2.namedWindow("avadaco", cv2.WINDOW_NORMAL)
+cv2.resizeWindow("avadaco", 1280, 720)
+
+
 ret, frame1 = vid.read()
 if not ret:
     print("Error: Failed to read video")
     vid.release()
     exit()
-roi = cv2.selectROI("Select ROI", frame1, showCrosshair=True)
-cv2.destroyWindow("Select ROI")
+cv2.imshow("avadaco", frame1)
+cv2.waitKey(1)
+roi = cv2.selectROI("avadaco", frame1, showCrosshair=True)
+#cv2.destroyWindow("avadaco")
 
 x, y, w, h = roi
 print("Fixpoint ROI:", x, y, w, h)
@@ -40,6 +46,17 @@ cv2.imshow("Feature Points in ROI", vis)
 cv2.waitKey(0)
 cv2.destroyWindow("Feature Points in ROI")
 
+det_roi = cv2.selectROI("avadaco", frame1, showCrosshair=True)
+dx, dy, dw, dh = det_roi
+#cv2.destroyWindow("avadaco")
+
+rel_dx = dx - x
+rel_dy = dy - y
+rel_dh = dh
+rel_dw = dw
+
+
+
 while True:
     ret, frame = vid.read()
     if not ret:
@@ -57,6 +74,10 @@ while True:
     dy = np.mean(good_new[:, 1] - good_old[:, 1])
     x += dx
     y += dy
+    det_x = int(x + rel_dx)
+    det_y = int(y + rel_dy)
+    det_w = rel_dw
+    det_h = rel_dh
     x_int, y_int = int(x), int(y)
     cv2.rectangle(
         frame,
@@ -65,18 +86,18 @@ while True:
         (0, 255, 0),
         2
     )
-    cv2.imshow("Tracked Frame", frame)
+    cv2.rectangle(
+        frame,
+        (det_x, det_y),
+        (det_x + det_w, det_y + det_h),
+        (255, 0, 0),
+        2
+    )
+    cv2.imshow("avadaco", frame)
     if cv2.waitKey(20) & 0xFF == ord('q'):
         break
     prev_gray = curr_gray.copy()
     p0_full = good_new.reshape(-1, 1, 2)
 
 
-# while True:
-#     ret, frame = vid.read()
-#     if not ret:
-#         break
-#     cv2.imshow("Video Frame", frame)
-#     if cv2.waitKey(1) & 0xFF == ord('q'):
-#         break
-# vid.release()
+
